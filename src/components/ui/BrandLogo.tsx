@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | '8xl' | '9xl' | number;
@@ -14,13 +13,9 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
   className = '',
   textSize = 'text-base'
 }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   
   // Handle numeric sizes (in px) or predefined tailwind sizes
-  const textSizeClass = typeof size === 'number' 
-    ? { fontSize: `${size}px` } 
-    : { className: `text-${size}` };
+ 
   
   return (
     <div className={`text-center ${className}`}>
