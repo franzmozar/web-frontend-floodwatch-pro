@@ -1,54 +1,118 @@
-# React + TypeScript + Vite
+# NAC FloodWatch Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive flood monitoring and early warning system for urban areas. FloodWatch Pro allows real-time tracking of flood sensors, user statuses, and emergency notifications.
 
-Currently, two official plugins are available:
+![FloodWatch Pro Dashboard](docs/dashboard-preview.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **Real-time flood monitoring** - Track flood sensors across multiple locations
+- **User management** - Monitor user statuses and emergency situations
+- **Dark/Light mode** - Full theme support with optimized UI for both modes
+- **Responsive design** - Optimized for desktop, tablet, and mobile devices
+- **Modern UI components** - Reusable components built with React, TypeScript and TailwindCSS
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **Frontend Framework**: React with TypeScript
+- **Styling**: TailwindCSS
+- **Icons**: Heroicons (@heroicons/react)
+- **Authentication**: Custom auth flow with OTP verification
+
+## Prerequisites
+
+Before getting started, ensure you have the following installed:
+
+- Node.js (v16 or later)
+- npm (v7 or later)
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/nac-floodwatch-pro.git
+cd nac-floodwatch-pro
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm install
 ```
+
+> **Note**: Due to dependency version conflicts, you may need to use the `--force` flag:
+>
+> ```bash
+> npm install --force
+> ```
+
+3. Create a `.env` file in the root directory with the following content:
+
+```
+VITE_API_URL=http://localhost:3000/api
+```
+
+## Development
+
+To start the development server:
+
+```bash
+npm run dev
+```
+
+This will start the application on [http://localhost:5173](http://localhost:5173)
+
+## Project Structure
+
+```
+src/
+├── components/         # Reusable UI components
+│   ├── auth/           # Authentication components
+│   └── ui/             # UI components (Badge, Card, DataTable, etc.)
+├── contexts/           # React contexts
+│   ├── AuthContext.tsx # Authentication state management
+│   └── ThemeContext.tsx # Theme (dark/light) management
+├── hooks/              # Custom React hooks
+├── layouts/            # Page layouts
+├── pages/              # Application pages
+│   ├── DashboardPage.tsx
+│   ├── FloodWatchPage.tsx
+│   ├── LoginPage.tsx
+│   └── UsersPage.tsx
+└── App.tsx             # Main application component
+```
+
+## Key Components
+
+### UI Components
+
+- **Badge**: Customizable status badges with variants (success, danger, warning, info)
+- **Card**: Reusable card component with customizable shadows and styles
+- **DataTable**: Advanced data table with support for custom cell rendering and badge integration
+- **StatCard**: Statistical cards with trend indicators
+- **FloodWatchMap**: Map visualization for flood sensor locations
+
+### Auth Flow
+
+The application implements a two-step authentication process:
+
+1. Username/password login
+2. OTP verification
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Surigao National Agricultural Center (NAC) for the initiative
+- All contributors and stakeholders involved in the development
