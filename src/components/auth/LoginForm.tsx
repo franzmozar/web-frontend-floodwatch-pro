@@ -3,7 +3,11 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onSubmit?: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { theme } = useTheme();
@@ -13,6 +17,11 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     // Handle login logic here
     console.log({ email, password });
+    
+    // Call the onSubmit callback if provided
+    if (onSubmit) {
+      onSubmit();
+    }
   };
 
   return (
