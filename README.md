@@ -31,8 +31,8 @@ Before getting started, ensure you have the following installed:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/nac-floodwatch-pro.git
-cd nac-floodwatch-pro
+git clone https://github.com/franzmozar/web-frontend-floodwatch-pro.git
+cd web-frontend-floodwatch-pro
 ```
 
 2. Install dependencies:
