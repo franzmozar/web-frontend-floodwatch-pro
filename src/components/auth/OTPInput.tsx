@@ -2,7 +2,12 @@ import React, { useRef, useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const OTPInput: React.FC = () => {
+interface OTPInputProps {
+  onBack?: () => void;
+  onSubmit?: () => void;
+}
+
+const OTPInput: React.FC<OTPInputProps> = ({ onBack, onSubmit }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [otp, setOtp] = useState<string[]>(Array(4).fill(''));
@@ -76,7 +81,11 @@ const OTPInput: React.FC = () => {
   const handleSubmit = () => {
     const otpValue = otp.join('');
     console.log('OTP Submitted:', otpValue);
-    // Add verification logic here
+    
+    // Call the onSubmit callback if provided
+    if (onSubmit) {
+      onSubmit();
+    }
   };
 
   return (
@@ -111,10 +120,21 @@ const OTPInput: React.FC = () => {
 
       <Button 
         onClick={handleSubmit}
-        className="rounded-full mt-6 w-full py-4 bg-blue-500 hover:bg-blue-600 text-white"
+        className={`rounded-full mt-4 ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}`}
       >
         Confirm
       </Button>
+
+      {onBack && (
+        <div className="text-center mt-4">
+          <button 
+            onClick={onBack}
+            className={`text-sm ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            ← Back to login
+          </button>
+        </div>
+      )}
     </div>
   );
 };

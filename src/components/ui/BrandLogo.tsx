@@ -33,7 +33,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
       {showText && (
         <p 
           style={{ color: '#5271ff' }} 
-          className={`mt-2 ${textSize}`}
+          className={`${textSize}`}
         >
           Mobile Service
         </p>
