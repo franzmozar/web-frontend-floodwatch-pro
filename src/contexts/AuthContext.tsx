@@ -1,49 +1,123 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import FloodWatchApiService, { User } from '../services/floodwatch-api.service';
 
+// Define the shape of our auth context
 interface AuthContextType {
+  user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: () => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
+// Create the auth context with default values
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  token: null,
   isAuthenticated: false,
-  login: () => {},
-  logout: () => {}
+  isLoading: true,
+  login: async () => {},
+  logout: async () => {},
+  updateUser: () => {},
 });
 
-export const useAuth = () => useContext(AuthContext);
-
+// AuthProvider props interface
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+// AuthProvider component
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('auth-token'));
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Check localStorage for auth state on initial load
+  // Check if user is authenticated on mount
   useEffect(() => {
-    const storedAuthStatus = localStorage.getItem('isAuthenticated');
-    if (storedAuthStatus === 'true') {
-      setIsAuthenticated(true);
+    const verifyToken = async () => {
+      try {
+        if (token) {
+          const response = await FloodWatchApiService.getUserProfile();
+          setUser(response.data.data);
+        }
+      } catch (error) {
+        // Token is invalid or expired
+        localStorage.removeItem('auth-token');
+        setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [token]);
+
+  // Login function
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const response = await FloodWatchApiService.login({ email, password });
+      const { user, token } = response.data.data;
+      
+      // Save token to localStorage
+      localStorage.setItem('auth-token', token);
+      
+      // Update state
+      setToken(token);
+      setUser(user);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  const login = () => {
-    setIsAuthenticated(true);
-    localStorage.setItem('isAuthenticated', 'true');
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
+  // Logout function
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await FloodWatchApiService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear auth data regardless of API success
+      localStorage.removeItem('auth-token');
+      setToken(null);
+      setUser(null);
+      setIsLoading(false);
+    }
   };
+
+  // Update user data
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
+  };
+
+  // Compute whether user is authenticated
+  const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export default AuthContext; 
+// Custom hook for using auth context
+export const useAuth = () => {
+  return useContext(AuthContext);
+}; 

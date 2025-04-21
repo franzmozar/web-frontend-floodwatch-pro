@@ -116,3 +116,77 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Surigao National Agricultural Center (NAC) for the initiative
 - All contributors and stakeholders involved in the development
+
+## Backend Configuration
+
+This project uses a custom backend API service to manage flood monitoring data. The backend API is designed to handle authentication, data storage, and real-time alerts.
+
+### API Service Setup
+
+The application connects to the backend API using custom services:
+
+- `api.service.ts` - Base API service for making HTTP requests with authentication
+- `floodwatch-api.service.ts` - Specific API service for FloodWatch functionality
+- `test-api.service.ts` - Test utilities for generating sample data
+
+### Environment Configuration
+
+Create a `.env` file based on the provided `.env.example`:
+
+```
+# API Configuration
+VITE_API_URL=http://localhost:8000/api
+VITE_AUTH_KEY=auth-token
+
+# Environment
+NODE_ENV=development
+```
+
+Replace `VITE_API_URL` with your actual backend API URL.
+
+### Authentication
+
+The API uses token-based authentication. The token is stored in localStorage and sent with each request in the Authorization header:
+
+```
+Authorization: Bearer <token>
+```
+
+### Test Data Generation
+
+For development and testing, you can use the TestDataGenerator component to create sample flood data:
+
+1. Single records with custom values
+2. Batch generation of random flood data records
+3. Reset test data
+
+## Development
+
+### Prerequisites
+
+- Node.js 16+
+- npm or yarn
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+- `/src/components` - React components
+- `/src/contexts` - React context providers
+- `/src/hooks` - Custom React hooks
+- `/src/services` - API services
+- `/src/utils` - Utility functions
