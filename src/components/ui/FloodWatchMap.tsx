@@ -77,7 +77,8 @@ const FloodWatchMap: React.FC<FloodWatchMapProps> = ({
                 key={location.id}
                 className={`absolute w-4 h-4 rounded-full ${getRiskColor(location.risk)} 
                   transform -translate-x-1/2 -translate-y-1/2 border-2 
-                  ${isDark ? 'border-gray-800' : 'border-white'}`}
+                  ${isDark ? 'border-gray-800' : 'border-white'} 
+                  ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.3)]' : ''}`}
                 style={{ left, top }}
                 title={`${location.name} - ${location.risk} risk`}
               />
@@ -87,18 +88,18 @@ const FloodWatchMap: React.FC<FloodWatchMapProps> = ({
         
         {/* Legend */}
         <div className={`absolute bottom-4 right-4 p-2 rounded-md ${isDark ? 'bg-gray-900/80' : 'bg-white/80'}`}>
-          <div className="text-sm font-medium mb-2">Risk Level</div>
+          <div className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Risk Level</div>
           <div className="flex items-center mb-1">
             <div className="w-3 h-3 rounded-full bg-green-500 mr-2" />
-            <span className="text-xs">Low</span>
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Low</span>
           </div>
           <div className="flex items-center mb-1">
             <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2" />
-            <span className="text-xs">Medium</span>
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Medium</span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-red-500 mr-2" />
-            <span className="text-xs">High</span>
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>High</span>
           </div>
         </div>
       </div>

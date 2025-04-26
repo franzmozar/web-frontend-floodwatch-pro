@@ -3,6 +3,9 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import BrandLogo from './BrandLogo';
 import { DashboardIcon, FloodWatchIcon, UsersIcon, LogoutIcon } from './icons';
+import LogoutConfirmation from './LogoutConfirmation';
+
+type NavPage = 'dashboard' | 'users' | 'floodwatch';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -35,14 +38,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, active = false, 
 };
 
 interface SidebarProps {
-  activePage?: string;
-  onNavigate?: (page: string) => void;
+  activePage?: NavPage;
+  onNavigate?: (page: NavPage) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard', onNavigate }) => {
   const { theme } = useTheme();
   const { logout } = useAuth();
   const isDark = theme === 'dark';
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({ 
     display: 'none',
     left: 0,
@@ -50,13 +54,27 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard', onNavigate 
     height: 0
   });
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = (page: NavPage) => {
+    console.log("Sidebar navigation clicked:", page);
+    console.log("onNavigate function exists:", !!onNavigate);
+    
     if (onNavigate) {
       onNavigate(page);
+    } else {
+      console.error("Navigation function not passed to Sidebar");
     }
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirmation(true);
+  };
+  
+  const handleCancelLogout = () => {
+    setShowLogoutConfirmation(false);
+  };
+  
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirmation(false);
     logout();
   };
 
@@ -86,6 +104,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard', onNavigate 
     return () => {
       window.removeEventListener('resize', updateIndicator);
     };
+  }, [activePage]);
+
+  // Log current active page for debugging
+  useEffect(() => {
+    console.log("Sidebar current active page:", activePage);
   }, [activePage]);
 
   return (
@@ -132,9 +155,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard', onNavigate 
           id="sidebar-item-logout"
           icon={<LogoutIcon color={isDark ? '#9ca3af' : '#374151'} />}
           label="Logout"
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
         />
       </div>
+      
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmation
+        isOpen={showLogoutConfirmation}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   );
 };

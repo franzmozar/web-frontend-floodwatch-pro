@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
+  setDummyUser: () => void;
 }
 
 // Create the auth context with default values
@@ -21,6 +22,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   updateUser: () => {},
+  setDummyUser: () => {},
 });
 
 // AuthProvider props interface
@@ -39,8 +41,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const verifyToken = async () => {
       try {
         if (token) {
-          const response = await FloodWatchApiService.getUserProfile();
-          setUser(response.data.data);
+          // For dummy token, skip API verification
+          if (token.startsWith('dummy-token-')) {
+            // Create a dummy user if we have a dummy token but no user
+            if (!user) {
+              setUser({
+                id: 1,
+                name: 'Admin User',
+                email: 'admin@example.com',
+                role: 'admin'
+              });
+            }
+          } else {
+            // Only call API for real tokens
+            const response = await FloodWatchApiService.getUserProfile();
+            setUser(response.data.data);
+          }
         }
       } catch (error) {
         // Token is invalid or expired
@@ -78,7 +94,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await FloodWatchApiService.logout();
+      // Only call logout API if not using dummy token
+      if (token && !token.startsWith('dummy-token-')) {
+        await FloodWatchApiService.logout();
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -94,7 +113,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const updateUser = (userData: Partial<User>) => {
     if (user) {
       setUser({ ...user, ...userData });
+    } else {
+      // If no user exists yet, create one with the provided data
+      setUser(userData as User);
     }
+  };
+
+  // Set dummy user and token for development/testing
+  const setDummyUser = () => {
+    const dummyUser = {
+      id: 1,
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: 'admin'
+    };
+    
+    const dummyToken = 'dummy-token-' + Date.now();
+    
+    // Save token to localStorage
+    localStorage.setItem('auth-token', dummyToken);
+    
+    // Update state
+    setToken(dummyToken);
+    setUser(dummyUser);
   };
 
   // Compute whether user is authenticated
@@ -110,6 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         logout,
         updateUser,
+        setDummyUser,
       }}
     >
       {children}

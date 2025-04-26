@@ -1,9 +1,11 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import Sidebar from './Sidebar';
 import SearchBar from './SearchBar';
 import UserDropdown from './UserDropdown';
 import ThemeToggle from './ThemeToggle';
+
+type NavPage = 'dashboard' | 'users' | 'floodwatch';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -13,8 +15,8 @@ interface AdminLayoutProps {
     role: string;
     avatarUrl?: string;
   };
-  activePage?: string;
-  onNavigate?: (page: string) => void;
+  activePage?: NavPage;
+  onNavigate?: (page: NavPage) => void;
   onLogout?: () => void;
 }
 
@@ -28,6 +30,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  // Debug logs for props
+  useEffect(() => {
+    console.log("AdminLayout: Active Page =", activePage);
+    console.log("AdminLayout: Navigation function exists =", !!onNavigate);
+  }, [activePage, onNavigate]);
 
   const handleSearch = (query: string) => {
     console.log('Search query:', query);

@@ -1,27 +1,34 @@
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import UsersPage from './pages/UsersPage';
+import FloodWatchPage from './pages/FloodWatchPage';
 import TestingPage from './pages/TestingPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+type NavPage = 'dashboard' | 'users' | 'floodwatch';
 
 function AppContent() {
-  const { isAuthenticated, login, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<'main' | 'testing'>('main');
+  const [activePage, setActivePage] = useState<NavPage>('dashboard');
 
-  // Mock credentials for automatic login from the LoginPage component
-  // In a real app, this would come from the login form
-  const mockEmail = "test@example.com";
-  const mockPassword = "password123";
+  // Load active page from localStorage on initial render
+  useEffect(() => {
+    const savedPage = localStorage.getItem('activePage') as NavPage | null;
+    if (savedPage && ['dashboard', 'users', 'floodwatch'].includes(savedPage)) {
+      setActivePage(savedPage);
+    }
+  }, []);
 
-  // Function to handle successful login
-  const handleLogin = () => {
-    // Call login with hardcoded credentials for testing
-    // In a real app, these would come from the login form
-    login(mockEmail, mockPassword).catch(error => {
-      console.error("Login failed:", error);
-    });
+  // Function to handle successful login (dummy)
+  const handleLoginSuccess = () => {
+    // This will be called from LoginPage component
+    // Authentication state will be set in the LoginPage/LoginForm
+    // No need to do anything here as state is already updated
+    console.log("Login success handled in App component");
   };
 
   // Function to handle logout
@@ -41,6 +48,14 @@ function AppContent() {
     setCurrentPage('main');
   };
 
+  // Handle navigation between pages - using useCallback to ensure stability
+  const handleNavigation = useCallback((page: NavPage) => {
+    console.log("App: handleNavigation called with:", page);
+    setActivePage(page);
+    // Save active page to localStorage
+    localStorage.setItem('activePage', page);
+  }, []);
+
   // Show the testing page
   if (currentPage === 'testing') {
     return (
@@ -58,13 +73,48 @@ function AppContent() {
     );
   }
 
-  // Show the main app
+  // Show the main app with conditional rendering for pages
   return (
     <div>
       {isAuthenticated ? (
         <div>
-          <DashboardPage onLogout={handleLogout} />
+          {activePage === 'dashboard' && (
+            <DashboardPage 
+              onLogout={handleLogout} 
+              onNavigate={handleNavigation} 
+            />
+          )}
+          
+          {activePage === 'users' && (
+            <UsersPage 
+              onLogout={handleLogout} 
+              onNavigate={handleNavigation} 
+            />
+          )}
+          
+          {activePage === 'floodwatch' && (
+            <FloodWatchPage 
+              onLogout={handleLogout} 
+              onNavigate={handleNavigation} 
+            />
+          )}
+          
           <div className="fixed bottom-4 right-4 flex space-x-2">
+            <div className="flex space-x-2 mr-4">
+              <button 
+                onClick={() => handleNavigation('dashboard')}
+                className={`px-4 py-2 ${activePage === 'dashboard' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
+              >
+                Dashboard
+              </button>
+              <button 
+                onClick={() => handleNavigation('users')}
+                className={`px-4 py-2 ${activePage === 'users' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
+              >
+                Users
+              </button>
+            </div>
+            
             <button 
               onClick={goToTesting}
               className="px-4 py-2 bg-gray-600 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
@@ -75,7 +125,7 @@ function AppContent() {
         </div>
       ) : (
         <div>
-          <LoginPage onLoginSuccess={handleLogin} />
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
           <div className="fixed bottom-4 right-4">
             <button 
               onClick={goToTesting}

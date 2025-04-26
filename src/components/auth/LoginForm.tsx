@@ -2,26 +2,32 @@ import React, { useState } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
   onSubmit?: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@example.com');
+  const [password, setPassword] = useState('password');
+  const [isLoading, setIsLoading] = useState(false);
   const { theme } = useTheme();
+  const { login } = useAuth();
   const isDark = theme === 'dark';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ email, password });
+    setIsLoading(true);
     
-    // Call the onSubmit callback if provided
-    if (onSubmit) {
-      onSubmit();
-    }
+    // Simulate loading for a more realistic feel
+    setTimeout(() => {
+      // Directly call onSubmit to go to dashboard, bypassing actual login
+      if (onSubmit) {
+        onSubmit();
+      }
+      setIsLoading(false);
+    }, 500);
   };
 
   return (
@@ -29,6 +35,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
       <div className="text-left mb-8">
         <h2 className={`text-3xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Admin Login</h2>
         <p className={`mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Welcome Back</p>
+        <p className={`mt-2 text-sm ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>
+          Dummy credentials are pre-filled. Just click Login.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -65,6 +74,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
         <Button 
           type="submit" 
           className={`rounded-full mt-4 ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}`}
+          isLoading={isLoading}
         >
           Login
         </Button>

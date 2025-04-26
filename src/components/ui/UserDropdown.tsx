@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import LogoutConfirmation from './LogoutConfirmation';
 
 interface UserDropdownProps {
   user: {
@@ -12,6 +13,7 @@ interface UserDropdownProps {
 
 const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -34,7 +36,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsOpen(false); // Close the dropdown
+    setShowLogoutConfirmation(true);
+  };
+  
+  const handleCancelLogout = () => {
+    setShowLogoutConfirmation(false);
+  };
+  
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirmation(false);
     if (onLogout) {
       onLogout();
     }
@@ -97,7 +109,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
           </a>
           <div className={`border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}></div>
           <button 
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             className={`block w-full text-left px-4 py-2 text-sm ${
               isDark ? 'text-red-400 hover:bg-gray-700' : 'text-red-500 hover:bg-gray-100'
             }`}
@@ -106,6 +118,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
           </button>
         </div>
       )}
+      
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmation
+        isOpen={showLogoutConfirmation}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   );
 };
