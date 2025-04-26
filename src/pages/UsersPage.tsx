@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/ui/AdminLayout';
 import usePageTitle from '../hooks/usePageTitle';
-import DataTable from '../components/ui/DataTable';
 import { BadgeVariant } from '../components/ui/Badge';
 import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';

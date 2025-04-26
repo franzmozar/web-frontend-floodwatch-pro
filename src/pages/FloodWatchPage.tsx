@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/ui/AdminLayout';
 import usePageTitle from '../hooks/usePageTitle';
-import { BadgeVariant } from '../components/ui/Badge';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import FloodwatchDetailsDialog from '../components/ui/FloodwatchDetailsDialog';
@@ -79,12 +78,6 @@ const FloodWatchPage: React.FC<FloodWatchPageProps> = ({ onLogout, onNavigate })
     },
   ];
 
-  // Risk variant mapping
-  const riskVariantMapping: Record<string, BadgeVariant> = {
-    'high': 'danger',
-    'medium': 'warning',
-    'safe': 'success'
-  };
 
   // Trend icons
   const getTrendIcon = (trend: string) => {
