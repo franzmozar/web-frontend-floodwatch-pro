@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/ui/AdminLayout';
 import usePageTitle from '../hooks/usePageTitle';
 import { BadgeVariant } from '../components/ui/Badge';
-import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
-import UserManagementDialog from '../components/ui/UserManagementDialog';
 import ViewUserDetailsDialog from '../components/ui/ViewUserDetailsDialog';
 
 type NavPage = 'dashboard' | 'users' | 'floodwatch';
@@ -40,11 +39,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
   // Sorting state
   const [sortField, setSortField] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  // Management Dialog state
-  const [managementDialogOpen, setManagementDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'add' | 'edit' | 'delete'>('add');
-  const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
 
   // View Details Dialog state
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -126,29 +120,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
       badgeOptions: {
         variantMapping: statusVariantMapping
       }
-    },
-    { 
-      key: 'actions', 
-      title: 'ACTIONS',
-      sortable: false,
-      render: (_: any, record: User) => (
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleEditUser(record)}
-            className={`p-1 rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} cursor-pointer`}
-            title="Edit User"
-          >
-            <PencilSquareIcon className="h-5 w-5 text-blue-500" />
-          </button>
-          <button
-            onClick={() => handleDeleteUser(record)}
-            className={`p-1 rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} cursor-pointer`}
-            title="Delete User"
-          >
-            <TrashIcon className="h-5 w-5 text-red-500" />
-          </button>
-        </div>
-      )
     }
   ];
 
@@ -177,43 +148,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
 
   const handleCloseDetailsDialog = () => {
     setDetailsDialogOpen(false);
-  };
-
-  // Management Dialog handlers
-  const handleAddUser = () => {
-    setDialogMode('add');
-    setSelectedUser(undefined);
-    setManagementDialogOpen(true);
-  };
-
-  const handleEditUser = (user: User) => {
-    setDialogMode('edit');
-    setSelectedUser(user);
-    setManagementDialogOpen(true);
-  };
-
-  const handleDeleteUser = (user: User) => {
-    setDialogMode('delete');
-    setSelectedUser(user);
-    setManagementDialogOpen(true);
-  };
-
-  const handleCloseManagementDialog = () => {
-    setManagementDialogOpen(false);
-  };
-
-  const handleManagementDialogConfirm = (userData: User | string) => {
-    if (typeof userData === 'string') {
-      // Handle delete (userData is the user ID)
-      setUsers(users.filter(user => user.id !== userData));
-    } else {
-      // Handle add/edit
-      if (dialogMode === 'add') {
-        setUsers([...users, userData]);
-      } else if (dialogMode === 'edit') {
-        setUsers(users.map(user => user.id === userData.id ? userData : user));
-      }
-    }
   };
 
   // Filter and sort users
@@ -258,8 +192,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
       onLogout={onLogout}
     >
       <div>
-        {/* Search and Add User Bar */}
-        <div className="mb-6 flex items-center justify-between">
+        {/* Search Bar */}
+        <div className="mb-6 flex items-center">
           <div className="relative max-w-md w-full">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon className={`w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
@@ -276,15 +210,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           </div>
-          <button
-            onClick={handleAddUser}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer ${
-              isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Add User
-          </button>
         </div>
         
         {/* Users Table */}
@@ -358,24 +283,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
                       {user.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditUser(user)}
-                        className={`p-1 rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} cursor-pointer`}
-                        title="Edit User"
-                      >
-                        <PencilSquareIcon className="h-5 w-5 text-blue-500" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user)}
-                        className={`p-1 rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} cursor-pointer`}
-                        title="Delete User"
-                      >
-                        <TrashIcon className="h-5 w-5 text-red-500" />
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -395,15 +302,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
           </div>
         </div>
       </div>
-
-      {/* User Management Dialog */}
-      <UserManagementDialog
-        isOpen={managementDialogOpen}
-        onClose={handleCloseManagementDialog}
-        user={selectedUser}
-        mode={dialogMode}
-        onConfirm={handleManagementDialogConfirm}
-      />
 
       {/* User Details Dialog */}
       <ViewUserDetailsDialog 

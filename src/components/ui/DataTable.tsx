@@ -94,7 +94,7 @@ const DataTable: React.FC<DataTableProps> = ({
         </h2>
         <button 
           onClick={handleViewAll}
-          className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-md transition-colors"
+          className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-md transition-colors cursor-pointer"
         >
           View All
         </button>
