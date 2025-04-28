@@ -84,6 +84,27 @@ export const FloodWatchIcon: React.FC<IconProps> = ({ className = "", size = 20,
   );
 };
 
+export const EvacuationCenterIcon: React.FC<IconProps> = ({ className = "", size = 20, color }) => {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path 
+        d="M3 21H21M6 18.0001V9.99997M10 18.0001V9.99997M14 18.0001V9.99997M18 18.0001V9.99997M21 6.99997L12 2.99997L3 6.99997"
+        stroke={color || "currentColor"} 
+        strokeWidth="1.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
 export const LogoutIcon: React.FC<IconProps> = ({ className = "", size = 20, color }) => {
   return (
     <svg 

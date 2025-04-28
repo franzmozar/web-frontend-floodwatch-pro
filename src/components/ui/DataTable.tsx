@@ -19,8 +19,6 @@ interface DataTableProps {
   title: string;
   columns: TableColumn[];
   data: any[];
-  viewAllLink?: string;
-  className?: string;
   onViewAll?: () => void;
 }
 
@@ -28,8 +26,6 @@ const DataTable: React.FC<DataTableProps> = ({
   title,
   columns,
   data,
-  viewAllLink = '#view-all',
-  className = '',
   onViewAll
 }) => {
   const { theme } = useTheme();
@@ -81,7 +77,7 @@ const DataTable: React.FC<DataTableProps> = ({
 
   return (
     <Card 
-      className={className}
+      className={`${isDark ? 'bg-gray-800' : 'bg-white'}`}
       shadowX={6}
       shadowY={6}
       shadowBlur={54}
@@ -120,35 +116,33 @@ const DataTable: React.FC<DataTableProps> = ({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {data.map((record, rowIndex) => (
-              <tr 
-                key={rowIndex} 
-                className={`${isDark ? 'hover:bg-gray-700/50 border-gray-700' : 'hover:bg-gray-50 border-gray-200'}`}
-              >
-                {columns.map((column, colIndex) => (
-                  <td 
-                    key={`${rowIndex}-${column.key}`} 
-                    className={`${column.isBadge ? 'p-0' : 'py-6 px-4'} ${
-                      isDark ? 'text-gray-100' : 'text-gray-700'
-                    } text-sm`}
-                  >
-                    {column.render ? (
-                      column.render(record[column.key], record)
-                    ) : column.isBadge && column.badgeOptions ? (
-                      <Badge 
-                        variant={getBadgeVariant(record[column.key], column.badgeOptions)} 
-                        fullWidth
-                      >
-                        {record[column.key]}
-                      </Badge>
-                    ) : (
-                      record[column.key]
-                    )}
-                  </td>
-                ))}
+          <tbody className={`bg-white divide-y divide-gray-200 ${isDark ? 'bg-gray-800 divide-gray-700 text-gray-200' : ''}`}>
+            {data.length > 0 ? (
+              data.slice(0, 5).map((row, rowIndex) => (
+                <tr key={rowIndex} className={`${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
+                  {columns.map((col, _colIndex) => (
+                    <td key={`${rowIndex}-${col.key}`} className="px-6 py-4 whitespace-nowrap">
+                      {col.render 
+                        ? col.render(row[col.key], row)
+                        : col.isBadge
+                          ? <Badge 
+                              variant={getBadgeVariant(row[col.key], col.badgeOptions)}
+                              fullWidth
+                            >
+                              {row[col.key]}
+                            </Badge>
+                          : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-4 text-center text-gray-500">
+                  No data available
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

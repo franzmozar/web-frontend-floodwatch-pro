@@ -4,8 +4,7 @@ import Sidebar from './Sidebar';
 import SearchBar from './SearchBar';
 import UserDropdown from './UserDropdown';
 import ThemeToggle from './ThemeToggle';
-
-type NavPage = 'dashboard' | 'users' | 'floodwatch';
+import { NavPage } from '../../types/common';
 
 interface AdminLayoutProps {
   children: ReactNode;

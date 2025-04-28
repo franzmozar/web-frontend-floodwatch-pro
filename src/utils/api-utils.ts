@@ -1,6 +1,9 @@
 import { AxiosError } from 'axios';
 import TestApiService from '../services/test-api.service';
-import { FloodData as OriginalFloodData } from '../services/floodwatch-api.service';
+// Prefixing with underscore to indicate intentional non-use for now
+interface _OriginalFloodData {
+  // ... existing code ...
+}
 
 // Define a modified FloodData type for test data generation
 // that makes id and timestamp optional
@@ -22,6 +25,8 @@ export interface TestFloodData {
  * @returns A readable error message string
  */
 export const extractErrorMessage = (error: any): string => {
+  if (!error) return 'An unknown error occurred';
+  
   if (error instanceof AxiosError) {
     if (error.response?.data?.message) {
       return error.response.data.message;
@@ -30,6 +35,12 @@ export const extractErrorMessage = (error: any): string => {
       return error.response.data.error;
     }
     return error.message;
+  }
+  
+  // Handle case when error.response exists but isn't coming from AxiosError
+  if (error.response?.data) {
+    if (error.response.data.message) return error.response.data.message;
+    if (error.response.data.error) return error.response.data.error;
   }
   
   return typeof error === 'string' ? error : 'An unexpected error occurred';

@@ -2,21 +2,12 @@ import React from 'react';
 import { UserCircleIcon, PhoneIcon, MapPinIcon, IdentificationIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../../contexts/ThemeContext';
 import Dialog from './Dialog';
-
-interface User {
-  id: string;
-  name: string;
-  location: string;
-  coordinates: string;
-  contactNo: string;
-  gender: string;
-  status: string;
-}
+import { ApiUser } from '../../pages/UsersPage';
 
 interface ViewUserDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
+  user: ApiUser | null;
 }
 
 const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({ 
@@ -26,6 +17,19 @@ const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  // Status label mapping
+  const statusLabelMapping: Record<string, string> = {
+    '0': 'Emergency',
+    '1': 'Stable'
+  };
+
+  // Account status label mapping
+  const accountStatusLabelMapping: Record<string, string> = {
+    '0': 'Inactive',
+    '1': 'Active',
+    '2': 'Restricted'
+  };
 
   // Generate icon
   const userIcon = (
@@ -50,16 +54,20 @@ const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({
   );
 
   // Function to create a Google Maps URL from coordinates
-  const createMapsUrl = (coords: string) => {
+  const createMapsUrl = (coords: string | null) => {
     if (!coords || coords === '') return null;
     return `https://www.google.com/maps?q=${coords}`;
   };
 
   if (!user) return null;
 
-  const mapsUrl = createMapsUrl(user.coordinates);
+  const location = user.inputLocations?.[0];
+  const mapsUrl = location?.exactLocation ? createMapsUrl(location.exactLocation) : null;
   
-  const statusColor = user.status === 'Emergency' 
+  const status = location?.status.toString() || '1';
+  const statusLabel = statusLabelMapping[status] || 'Stable';
+  
+  const statusColor = status === '0' 
     ? isDark ? 'bg-red-600' : 'bg-red-500'
     : isDark ? 'bg-green-600' : 'bg-green-500';
 
@@ -72,17 +80,35 @@ const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({
       actions={actionButtons}
       maxWidth="4xl"
     >
+      {/* Custom CSS for emergency badge pulse animation */}
+      <style>{`
+        @keyframes pulse-red {
+          0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+          }
+        }
+        .pulse-emergency {
+          animation: pulse-red 1.5s infinite;
+        }
+      `}</style>
+      
       <div className={`-mt-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
         {/* Header with status and name */}
         <div className={`relative mb-8 pb-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex justify-between items-start">
-            <h2 className="text-2xl font-bold">{user.name}</h2>
-            <span className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full ${statusColor} text-white`}>
-              {user.status}
+            <h2 className="text-2xl font-bold">{user.user.username}</h2>
+            <span className={`px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full ${statusColor} text-white ${status === '0' ? 'pulse-emergency' : ''}`}>
+              {statusLabel}
             </span>
           </div>
           <p className={`mt-1 text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            <span className="font-medium">ID:</span> {user.id}
+            <span className="font-medium">ID:</span> {user.user.id}
           </p>
         </div>
 
@@ -99,18 +125,20 @@ const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({
                 </div>
                 <div className="ml-4">
                   <p className="text-lg font-medium">Phone Number</p>
-                  <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.contactNo}</p>
+                  <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.user.phoneNumber}</p>
                 </div>
               </div>
               
-              {/* Gender */}
+              {/* Account Status */}
               <div className="flex items-start">
                 <div className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
                   <IdentificationIcon className={`h-6 w-6 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} />
                 </div>
                 <div className="ml-4">
-                  <p className="text-lg font-medium">Gender</p>
-                  <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.gender}</p>
+                  <p className="text-lg font-medium">Account Status</p>
+                  <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {accountStatusLabelMapping[location?.accountStatus?.toString() || '0']}
+                  </p>
                 </div>
               </div>
             </div>
@@ -134,14 +162,20 @@ const ViewUserDetailsDialog: React.FC<ViewUserDetailsDialogProps> = ({
                       rel="noopener noreferrer"
                       className={`text-base ${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer`}
                     >
-                      {user.location || 'N/A'}
+                      {location?.address1 || 'N/A'}
                     </a>
                   ) : (
-                    <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.location || 'N/A'}</p>
+                    <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{location?.address1 || 'N/A'}</p>
                   )}
-                  {user.coordinates && (
+                  {location?.address2 && location?.address2 !== location?.address1 && (
+                    <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{location.address2}</p>
+                  )}
+                  <p className={`text-base mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {location ? `${location.city}, ${location.zipcode}, ${location.country}` : 'N/A'}
+                  </p>
+                  {location?.exactLocation && (
                     <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                      {user.coordinates}
+                      {location.exactLocation}
                     </p>
                   )}
                 </div>

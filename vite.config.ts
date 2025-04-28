@@ -12,13 +12,19 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://192.168.1.104/ens-mobile-app-backend/public',
+        target: 'https://ens-mobile-app-backend-419947829015.us-central1.run.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path
       },
       '/sample': {
-        target: 'http://192.168.1.104/ens-mobile-app-backend/public',
+        target: 'https://ens-mobile-app-backend-419947829015.us-central1.run.app',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      },
+      '/web': {
+        target: 'https://ens-mobile-app-backend-419947829015.us-central1.run.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path

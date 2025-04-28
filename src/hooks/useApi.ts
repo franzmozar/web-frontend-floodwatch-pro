@@ -3,8 +3,11 @@ import { useState, useCallback } from 'react';
 // Generic type for API calls with required params
 type ApiCallRequired<T, P> = (params: P) => Promise<T>;
 
-// Generic type for API calls with optional params
-type ApiCallOptional<T, P = any> = (params?: P) => Promise<T>;
+// Either comment out or prefix with underscore to indicate intentional non-use
+// Unused type, prefixing with underscore
+interface _ApiCallOptional {
+  // ... existing code ...
+}
 
 // Return type for the useApi hook
 interface UseApiReturn<T, P> {

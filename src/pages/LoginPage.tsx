@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import LoginForm from '../components/auth/LoginForm';
 import ThemeToggle from '../components/ui/ThemeToggle';
 import BrandLogo from '../components/ui/BrandLogo';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
 import usePageTitle from '../hooks/usePageTitle';
 
 interface LoginPageProps {
@@ -14,17 +14,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   
-  // Access auth context to use dummy login
-  const { setDummyUser } = useAuth();
-  
   // Set the page title
   usePageTitle('Login');
 
   // Function to handle login form submission
   const handleLoginSubmit = () => {
-    // Use the simplified dummy login function
-    setDummyUser();
-    
     // Call the parent component's onLoginSuccess if provided
     if (onLoginSuccess) {
       onLoginSuccess();

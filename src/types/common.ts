@@ -1,0 +1,1 @@
+export type NavPage = 'dashboard' | 'users' | 'floodwatch' | 'evacuation' | 'roads'; 

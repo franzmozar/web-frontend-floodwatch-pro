@@ -2,13 +2,14 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import FloodWatchPage from './pages/FloodWatchPage';
+import EvacuationCentersPage from './pages/EvacuationCentersPage';
+import ClosedRoadsPage from './pages/ClosedRoadsPage';
 import TestingPage from './pages/TestingPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 import { useState, useCallback, useEffect } from 'react';
-
-type NavPage = 'dashboard' | 'users' | 'floodwatch';
+import { NavPage } from './types/common';
 
 function AppContent() {
   const { isAuthenticated, logout } = useAuth();
@@ -18,7 +19,7 @@ function AppContent() {
   // Load active page from localStorage on initial render
   useEffect(() => {
     const savedPage = localStorage.getItem('activePage') as NavPage | null;
-    if (savedPage && ['dashboard', 'users', 'floodwatch'].includes(savedPage)) {
+    if (savedPage && ['dashboard', 'users', 'floodwatch', 'evacuation', 'roads'].includes(savedPage)) {
       setActivePage(savedPage);
     }
   }, []);
@@ -99,6 +100,20 @@ function AppContent() {
             />
           )}
           
+          {activePage === 'evacuation' && (
+            <EvacuationCentersPage 
+              onLogout={handleLogout} 
+              onNavigate={handleNavigation} 
+            />
+          )}
+
+          {activePage === 'roads' && (
+            <ClosedRoadsPage 
+              onLogout={handleLogout} 
+              onNavigate={handleNavigation} 
+            />
+          )}
+          
           <div className="fixed bottom-4 right-4 flex space-x-2">
             <div className="flex space-x-2 mr-4">
               <button 
@@ -112,6 +127,24 @@ function AppContent() {
                 className={`px-4 py-2 ${activePage === 'users' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
               >
                 Users
+              </button>
+              <button 
+                onClick={() => handleNavigation('floodwatch')}
+                className={`px-4 py-2 ${activePage === 'floodwatch' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
+              >
+                FloodWatch
+              </button>
+              <button 
+                onClick={() => handleNavigation('evacuation')}
+                className={`px-4 py-2 ${activePage === 'evacuation' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
+              >
+                Evacuation Centers
+              </button>
+              <button 
+                onClick={() => handleNavigation('roads')}
+                className={`px-4 py-2 ${activePage === 'roads' ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors`}
+              >
+                Closed Roads
               </button>
             </div>
             

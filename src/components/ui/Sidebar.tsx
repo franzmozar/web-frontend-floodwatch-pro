@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import BrandLogo from './BrandLogo';
-import { DashboardIcon, FloodWatchIcon, UsersIcon, LogoutIcon } from './icons';
+import { DashboardIcon, FloodWatchIcon, UsersIcon, LogoutIcon, EvacuationCenterIcon } from './icons';
 import LogoutConfirmation from './LogoutConfirmation';
-
-type NavPage = 'dashboard' | 'users' | 'floodwatch';
+import { MapIcon } from '@heroicons/react/24/outline';
+import { NavPage } from '../../types/common';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -146,6 +146,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage = 'dashboard', onNavigate 
           label="FloodWatch"
           active={activePage === 'floodwatch'}
           onClick={() => handleNavigate('floodwatch')}
+        />
+        <SidebarItem 
+          id="sidebar-item-evacuation"
+          icon={<EvacuationCenterIcon color={activePage === 'evacuation' ? 'white' : isDark ? '#9ca3af' : '#374151'} />}
+          label="Evacuation Centers"
+          active={activePage === 'evacuation'}
+          onClick={() => handleNavigate('evacuation')}
+        />
+        <SidebarItem 
+          id="sidebar-item-roads"
+          icon={<MapIcon className={`w-5 h-5 ${activePage === 'roads' ? 'text-white' : (isDark ? 'text-gray-400' : 'text-gray-600')}`} />}
+          label="Closed Roads"
+          active={activePage === 'roads'}
+          onClick={() => handleNavigate('roads')}
         />
       </div>
 

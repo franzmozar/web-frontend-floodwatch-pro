@@ -1,12 +1,11 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 
 // Define the base URL for the API
 // For development, we'll use the proxy configured in vite.config.ts
 // For production, use the actual backend URL
 const isDevelopment = import.meta.env.DEV;
-const API_BASE_URL = isDevelopment 
-  ? '' // Empty string to use the proxy
-  : (import.meta.env.VITE_API_URL || 'http://192.168.1.104/ens-mobile-app-backend/public');
+// Empty string to use the proxy in both development and production Docker
+const API_BASE_URL = ''; 
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
@@ -70,57 +69,53 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     // Log errors in development mode with enhanced details
     if (import.meta.env.DEV) {
-      console.group('%c API Error Details', 'color: #e74c3c; font-weight: bold; font-size: 14px');
-      
-      // Log the error object and message
-      console.error('Error:', error.message);
-      
-      // Request details
-      console.log('%c Request:', 'color: #f39c12; font-weight: bold', {
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        method: error.config?.method?.toUpperCase(),
-        headers: error.config?.headers,
-        data: error.config?.data ? JSON.parse(JSON.stringify(error.config.data)) : undefined,
-        params: error.config?.params
-      });
-      
-      // Response details if available
-      if (error.response) {
-        console.log('%c Response:', 'color: #e67e22; font-weight: bold', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          headers: error.response.headers,
-          data: error.response.data
+      try {
+        console.group('%c API Error Details', 'color: #e74c3c; font-weight: bold; font-size: 14px');
+        
+        // Log the error object and message
+        console.error('Error:', error.message);
+        
+        // Request details
+        console.log('%c Request:', 'color: #f39c12; font-weight: bold', {
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          method: error.config?.method?.toUpperCase(),
+          headers: error.config?.headers,
+          data: error.config?.data ? JSON.parse(JSON.stringify(error.config.data)) : undefined,
+          params: error.config?.params
         });
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log('%c No Response Received:', 'color: #9b59b6; font-weight: bold', error.request);
+        
+        // Response details if available
+        if (error.response) {
+          console.log('%c Response:', 'color: #e67e22; font-weight: bold', {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            headers: error.response.headers,
+            data: error.response.data
+          });
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.log('%c No Response Received:', 'color: #9b59b6; font-weight: bold', error.request);
+        }
+        
+        console.log('%c Complete Error Object:', 'color: #7f8c8d', error);
+        console.groupEnd();
+      } catch (loggingError) {
+        console.error('Error while logging API error:', loggingError);
+        console.error('Original error:', error.message);
       }
-      
-      console.log('%c Complete Error Object:', 'color: #7f8c8d', error);
-      console.groupEnd();
     }
     
     // Handle authentication errors
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login if unauthorized
       localStorage.removeItem('auth-token');
-      // Redirect to login page
-      window.location.href = '/login';
+      // We're in a service, so we can't directly redirect
+      // Instead, dispatch an event for the app to handle
+      window.dispatchEvent(new CustomEvent('auth-error', { detail: error.response }));
     }
-    
-    // Extract error message for better error handling
-    const errorMessage = error.response?.data ? 
-                       ((error.response.data as any).message || 
-                        (error.response.data as any).error) : 
-                       error.message ||
-                       'Network request failed';
-                         
-    // Return both the message and original error for more context
-    return Promise.reject({
-      message: errorMessage,
-      originalError: error
-    });
+
+    return Promise.reject(error);
   }
 );
 

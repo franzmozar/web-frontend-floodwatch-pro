@@ -4,8 +4,7 @@ import usePageTitle from '../hooks/usePageTitle';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import FloodwatchDetailsDialog from '../components/ui/FloodwatchDetailsDialog';
-
-type NavPage = 'dashboard' | 'users' | 'floodwatch';
+import { NavPage } from '../types/common';
 
 interface Floodwatch {
   id: string;
@@ -314,7 +313,7 @@ const FloodWatchPage: React.FC<FloodWatchPageProps> = ({ onLogout, onNavigate })
               </tr>
             </thead>
             <tbody className={`${isDark ? 'bg-gray-800' : 'bg-white'} divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
-              {filteredAndSortedData.map((item, index) => (
+              {filteredAndSortedData.map((item) => (
                 <tr key={item.id} className={`${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors duration-150`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 

@@ -5,17 +5,29 @@ import { BadgeVariant } from '../components/ui/Badge';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import ViewUserDetailsDialog from '../components/ui/ViewUserDetailsDialog';
+import FloodWatchApiService from '../services/floodwatch-api.service';
+import { NavPage } from '../types/common';
+import { UserCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
-type NavPage = 'dashboard' | 'users' | 'floodwatch';
+// API User interface for the /web/getusers endpoint
+export interface InputLocation {
+  address1: string;
+  address2: string;
+  city: string;
+  zipcode: string;
+  country: string;
+  exactLocation: string | null;
+  status: number;
+  accountStatus: number;
+}
 
-interface User {
-  id: string;
-  name: string;
-  location: string;
-  coordinates: string;
-  contactNo: string;
-  gender: string;
-  status: string;
+export interface ApiUser {
+  user: {
+    id: string;
+    phoneNumber: string;
+    username: string;
+  };
+  inputLocations: InputLocation[];
 }
 
 interface UsersPageProps {
@@ -37,59 +49,97 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   
   // Sorting state
-  const [sortField, setSortField] = useState<string>('id');
+  const [sortField, setSortField] = useState<string>('user.id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // View Details Dialog state
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedUserDetails, setSelectedUserDetails] = useState<User | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<ApiUser | null>(null);
 
   // User data
-  const [users, setUsers] = useState<User[]>([
-    { id: 'U001', name: 'Juan Cruz', location: 'Sabang, Surigao City', coordinates: '9.797810676218921, 125.47253955989012', contactNo: '09829304728', gender: 'Male', status: 'Emergency' },
-    { id: 'U002', name: 'Lito Reyes', location: '--', coordinates: '', contactNo: '09672834628', gender: 'Male', status: 'Stable' },
-    { id: 'U003', name: 'Bong Santos', location: '--', coordinates: '', contactNo: '09532738493', gender: 'Male', status: 'Stable' },
-    { id: 'U004', name: 'Rico Flores', location: '--', coordinates: '', contactNo: '09172345678', gender: 'Male', status: 'Stable' },
-    { id: 'U005', name: 'Nene Dela', location: '--', coordinates: '', contactNo: '09284567890', gender: 'Female', status: 'Stable' },
-    { id: 'U006', name: 'Junjun Ramos', location: '--', coordinates: '', contactNo: '09356789012', gender: 'Male', status: 'Stable' },
-    { id: 'U007', name: 'Tina Lopez', location: '--', coordinates: '', contactNo: '09478901234', gender: 'Female', status: 'Stable' },
-    { id: 'U008', name: 'Jessa Mari', location: '--', coordinates: '', contactNo: '09563214567', gender: 'Female', status: 'Stable' },
-  ]);
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Status variant mapping
-  const statusVariantMapping: Record<string, BadgeVariant> = {
-    'emergency': 'danger',
-    'stable': 'success'
+  // Fetch users data from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await FloodWatchApiService.get('/web/getusers');
+        console.log('Users API response:', response);
+        if (response?.data) {
+          setUsers(response.data);
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to fetch users data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Status variant mapping - using an underscore prefix to indicate intentionally unused var for now
+  const _statusVariantMapping: Record<string, BadgeVariant> = {
+    '0': 'danger',
+    '1': 'success',
+    '2': 'warning'
+  };
+
+  // Status label mapping
+  const statusLabelMapping: Record<string, string> = {
+    '0': 'Emergency',
+    '1': 'Stable'
+  };
+
+  // Account status label mapping
+  const accountStatusLabelMapping: Record<string, string> = {
+    '0': 'Inactive',
+    '1': 'Active',
+    '2': 'Restricted'
   };
 
   // Column definitions for user table
   const userColumns = [
     { 
-      key: 'id', 
+      key: 'user.id', 
       title: 'ID', 
       sortable: true, 
-      render: (value: string, record: User) => (
+      render: (_value: string, record: ApiUser) => (
         <button 
           onClick={() => handleViewUserDetails(record)}
           className={`${isDark ? 'text-blue-400' : 'text-blue-500'} hover:underline cursor-pointer`}
         >
-          {value}
+          {record.user.id.substring(0, 8)}...
         </button>
       )
     },
-    { key: 'name', title: 'NAME', sortable: true },
+    { 
+      key: 'user.username', 
+      title: 'USERNAME', 
+      sortable: true,
+      render: (_value: string, record: ApiUser) => record.user.username
+    },
     { 
       key: 'location', 
       title: 'LOCATION',
       sortable: true,
-      render: (value: string, record: any) => {
+      render: (value: string, record: ApiUser) => {
+        const location = record.inputLocations?.[0];
+        const address = location ? `${location.address1}, ${location.city}` : '--';
+        const exactLocation = location?.exactLocation;
+        
         // Function to create a Google Maps URL from coordinates
-        const createMapsUrl = (coords: string) => {
+        const createMapsUrl = (coords: string | null) => {
           if (!coords || coords === '') return null;
           return `https://www.google.com/maps?q=${coords}`;
         };
         
-        const mapsUrl = createMapsUrl(record.coordinates);
+        const mapsUrl = createMapsUrl(exactLocation);
         
         return (
           <div>
@@ -100,25 +150,60 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
                 rel="noopener noreferrer"
                 className={`${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer`}
               >
-                {value}
+                {address}
               </a>
             ) : (
-              <p className={isDark ? 'text-gray-300' : 'text-gray-800'}>{value}</p>
+              <p className={isDark ? 'text-gray-300' : 'text-gray-800'}>{address}</p>
             )}
-            {record.coordinates && <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{record.coordinates}</p>}
+            {exactLocation && <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{exactLocation}</p>}
           </div>
         );
       }
     },
-    { key: 'contactNo', title: 'Contact No.', sortable: true },
-    { key: 'gender', title: 'GENDER', sortable: true },
+    { 
+      key: 'user.phoneNumber', 
+      title: 'Contact No.', 
+      sortable: true,
+      render: (value: string, record: ApiUser) => record.user.phoneNumber
+    },
     { 
       key: 'status', 
       title: 'STATUS',
       sortable: true,
-      isBadge: true,
-      badgeOptions: {
-        variantMapping: statusVariantMapping
+      render: (_value: string, record: ApiUser) => {
+        const status = record.inputLocations?.[0]?.status.toString() || '1';
+        const statusLabel = statusLabelMapping[status] || 'Stable';
+        
+        return (
+          <span className={`px-5 py-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            status === '0' 
+              ? 'bg-[#EF4444] text-white pulse-emergency' 
+              : 'bg-[#10B981] text-white'
+          } ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.2)]' : ''}`}>
+            {statusLabel}
+          </span>
+        );
+      }
+    },
+    { 
+      key: 'accountStatus', 
+      title: 'ACCOUNT STATUS',
+      sortable: true,
+      render: (_value: string, record: ApiUser) => {
+        const accountStatus = record.inputLocations?.[0]?.accountStatus.toString() || '1';
+        const accountStatusLabel = accountStatusLabelMapping[accountStatus] || 'Active';
+        
+        return (
+          <span className={`px-5 py-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            accountStatus === '0' 
+              ? 'bg-[#6B7280] text-white' 
+              : accountStatus === '2'
+                ? 'bg-[#F59E0B] text-white'
+                : 'bg-[#3B82F6] text-white'
+          } ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.2)]' : ''}`}>
+            {accountStatusLabel}
+          </span>
+        );
       }
     }
   ];
@@ -141,7 +226,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
   };
 
   // View Details Dialog handlers
-  const handleViewUserDetails = (user: User) => {
+  const handleViewUserDetails = (user: ApiUser) => {
     setSelectedUserDetails(user);
     setDetailsDialogOpen(true);
   };
@@ -150,16 +235,42 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
     setDetailsDialogOpen(false);
   };
 
+  // Get nested property value
+  const getNestedPropertyValue = (obj: any, path: string) => {
+    return path.split('.').reduce((prev, curr) => {
+      return prev ? prev[curr] : null;
+    }, obj);
+  };
+
   // Filter and sort users
   const filteredAndSortedUsers = users
-    .filter(user => 
-      Object.values(user).some(value => 
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    )
+    .filter(user => {
+      const searchTermLower = searchTerm.toLowerCase();
+      
+      // Search in user properties
+      if (user.user.id.toLowerCase().includes(searchTermLower) ||
+          user.user.username.toLowerCase().includes(searchTermLower) ||
+          user.user.phoneNumber.toLowerCase().includes(searchTermLower)) {
+        return true;
+      }
+      
+      // Search in location properties if available
+      const location = user.inputLocations?.[0];
+      if (location) {
+        return (
+          (location.address1 && location.address1.toLowerCase().includes(searchTermLower)) ||
+          (location.address2 && location.address2.toLowerCase().includes(searchTermLower)) ||
+          (location.city && location.city.toLowerCase().includes(searchTermLower)) ||
+          (location.zipcode && location.zipcode.toLowerCase().includes(searchTermLower)) ||
+          (location.country && location.country.toLowerCase().includes(searchTermLower))
+        );
+      }
+      
+      return false;
+    })
     .sort((a, b) => {
-      const aValue = a[sortField as keyof typeof a];
-      const bValue = b[sortField as keyof typeof b];
+      const aValue = getNestedPropertyValue(a, sortField) || '';
+      const bValue = getNestedPropertyValue(b, sortField) || '';
       
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -192,6 +303,24 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
       onLogout={onLogout}
     >
       <div>
+        {/* Custom CSS for emergency badge pulse animation */}
+        <style>{`
+          @keyframes pulse-red {
+            0% {
+              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+              box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+          }
+          .pulse-emergency {
+            animation: pulse-red 1.5s infinite;
+          }
+        `}</style>
+        
         {/* Search Bar */}
         <div className="mb-6 flex items-center">
           <div className="relative max-w-md w-full">
@@ -212,95 +341,164 @@ const UsersPage: React.FC<UsersPageProps> = ({ onLogout, onNavigate }) => {
           </div>
         </div>
         
+        {/* Loading and Error States */}
+        {loading && (
+          <div className={`text-center py-8 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Loading users data...
+          </div>
+        )}
+        
+        {error && (
+          <div className="text-center py-8 text-red-500">
+            {error}
+          </div>
+        )}
+        
         {/* Users Table */}
-        <div className={`overflow-hidden shadow-sm rounded-lg ${isDark ? 'shadow-gray-900' : 'shadow-gray-200'}`}>
-          <table className="min-w-full">
-            <thead>
-              <tr className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                {userColumns.map((column) => (
-                  <th 
-                    key={column.key}
-                    className={`px-6 py-3 text-left text-xs font-medium ${
-                      isDark ? 'text-gray-200' : 'text-gray-600'
-                    } uppercase tracking-wider ${column.sortable ? 'cursor-pointer hover:bg-opacity-80' : ''}`}
-                    onClick={column.sortable ? () => handleSort(column.key) : undefined}
-                  >
-                    <div className="flex items-center">
-                      {column.title}
-                      {column.sortable && (
-                        <span className={`ml-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {getSortIndicator(column.key)}
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className={`${isDark ? 'bg-gray-800' : 'bg-white'} divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
-              {filteredAndSortedUsers.map((user, index) => (
-                <tr key={user.id} className={`${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors duration-150`}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button 
-                      onClick={() => handleViewUserDetails(user)}
-                      className={`${isDark ? 'text-blue-400' : 'text-blue-500'} hover:underline cursor-pointer`}
+        {!loading && !error && (
+          <div className={`overflow-hidden shadow-sm rounded-lg ${isDark ? 'shadow-gray-900' : 'shadow-gray-200'}`}>
+            <table className="min-w-full">
+              <thead>
+                <tr className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  {userColumns.map((column) => (
+                    <th 
+                      key={column.key}
+                      className={`px-6 py-3 text-left text-xs font-medium ${
+                        isDark ? 'text-gray-200' : 'text-gray-600'
+                      } uppercase tracking-wider ${column.sortable ? 'cursor-pointer hover:bg-opacity-80' : ''}`}
+                      onClick={column.sortable ? () => handleSort(column.key) : undefined}
                     >
-                      {user.id}
-                    </button>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {user.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={isDark ? 'text-gray-300' : 'text-gray-800'}>
-                      {user.coordinates ? (
-                        <a 
-                          href={`https://www.google.com/maps?q=${user.coordinates}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer`}
-                        >
-                          {user.location}
-                        </a>
-                      ) : (
-                        <p>{user.location}</p>
-                      )}
-                      {user.coordinates && <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user.coordinates}</p>}
-                    </div>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {user.contactNo}
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {user.gender}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-5 py-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.status === 'Emergency' 
-                        ? 'bg-[#EF4444] text-white' 
-                        : 'bg-[#10B981] text-white'
-                    } ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.2)]' : ''}`}>
-                      {user.status}
-                    </span>
-                  </td>
+                      <div className="flex items-center">
+                        {column.title}
+                        {column.sortable && (
+                          <span className={`ml-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {getSortIndicator(column.key)}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className={`px-6 py-4 ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'}`}>
-            Showing {filteredAndSortedUsers.length} of {users.length}
-            <div className="flex justify-end -mt-6">
-              <div className="flex">
-                <button className={`px-2 py-1 border rounded-l-md cursor-pointer ${isDark ? 'border-gray-600 text-gray-400 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'}`}>
-                  &lt;
-                </button>
-                <button className={`px-2 py-1 border-t border-b border-r cursor-pointer ${isDark ? 'border-gray-600 text-gray-400 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'} rounded-r-md`}>
-                  &gt;
-                </button>
+              </thead>
+              <tbody className={`${isDark ? 'bg-gray-800' : 'bg-white'} divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                {filteredAndSortedUsers.length > 0 ? (
+                  filteredAndSortedUsers.map((user) => (
+                    <tr key={user.user.id} className={`${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors duration-150`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button 
+                          onClick={() => handleViewUserDetails(user)}
+                          className={`${isDark ? 'text-blue-400' : 'text-blue-500'} hover:underline cursor-pointer`}
+                        >
+                          {user.user.id.substring(0, 8)}...
+                        </button>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                        {user.user.username}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={isDark ? 'text-gray-300' : 'text-gray-800'}>
+                          {user.inputLocations?.[0]?.exactLocation ? (
+                            <a 
+                              href={`https://www.google.com/maps?q=${user.inputLocations[0].exactLocation}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer`}
+                            >
+                              {user.inputLocations[0].address1}, {user.inputLocations[0].city}
+                            </a>
+                          ) : (
+                            <p>{user.inputLocations?.[0]?.address1 ? `${user.inputLocations[0].address1}, ${user.inputLocations[0].city}` : '--'}</p>
+                          )}
+                          {user.inputLocations?.[0]?.exactLocation && (
+                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {user.inputLocations[0].exactLocation}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                        {user.user.phoneNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const status = user.inputLocations?.[0]?.status.toString() || '1';
+                          const statusLabel = statusLabelMapping[status] || 'Stable';
+                          
+                          return (
+                            <span className={`px-5 py-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              status === '0' 
+                                ? 'bg-[#EF4444] text-white pulse-emergency' 
+                                : 'bg-[#10B981] text-white'
+                            } ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.2)]' : ''}`}>
+                              {statusLabel}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const accountStatus = user.inputLocations?.[0]?.accountStatus.toString() || '1';
+                          const accountStatusLabel = accountStatusLabelMapping[accountStatus] || 'Active';
+                          
+                          return (
+                            <span className={`px-5 py-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              accountStatus === '0' 
+                                ? 'bg-[#6B7280] text-white' 
+                                : accountStatus === '2'
+                                  ? 'bg-[#F59E0B] text-white'
+                                  : 'bg-[#3B82F6] text-white'
+                            } ${isDark ? 'shadow-[0_0_8px_rgba(255,255,255,0.2)]' : ''}`}>
+                              {accountStatusLabel}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className={`text-center py-16 px-4 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg`}>
+                        <div className="mx-auto flex justify-center mb-4">
+                          <UserCircleIcon className={`h-12 w-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        </div>
+                        <h3 className={`text-lg font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>No Users Found</h3>
+                        <p className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} max-w-md mx-auto`}>
+                          {searchTerm ? 
+                            `No users match the search term "${searchTerm}". Try adjusting your search criteria.` : 
+                            "There are currently no users in the system."}
+                        </p>
+                        {searchTerm && (
+                          <div className="mt-6">
+                            <button
+                              onClick={() => setSearchTerm('')}
+                              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+                            >
+                              Clear Search
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div className={`px-6 py-4 ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'}`}>
+              Showing {filteredAndSortedUsers.length} of {users.length}
+              <div className="flex justify-end -mt-6">
+                <div className="flex">
+                  <button className={`px-2 py-1 border rounded-l-md cursor-pointer ${isDark ? 'border-gray-600 text-gray-400 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'}`}>
+                    &lt;
+                  </button>
+                  <button className={`px-2 py-1 border-t border-b border-r cursor-pointer ${isDark ? 'border-gray-600 text-gray-400 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'} rounded-r-md`}>
+                    &gt;
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* User Details Dialog */}

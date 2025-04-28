@@ -48,7 +48,6 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   icon,
   iconBgColor,
-  iconColor = 'white',
   trendValue,
   trendPeriod,
   className = ''

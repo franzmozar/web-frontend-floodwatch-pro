@@ -9,9 +9,10 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
   const { login } = useAuth();
   const isDark = theme === 'dark';
@@ -19,15 +20,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate loading for a more realistic feel
-    setTimeout(() => {
-      // Directly call onSubmit to go to dashboard, bypassing actual login
+    try {
+      // Use the AuthContext login function which handles token storage
+      await login(email, password);
+      console.log('Login successful');
+      
+      // If login is successful, call the onSubmit callback to navigate to dashboard
       if (onSubmit) {
         onSubmit();
       }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(typeof err === 'string' ? err : 
+               err.message || 'Login failed. Please check your credentials.');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -35,16 +45,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
       <div className="text-left mb-8">
         <h2 className={`text-3xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Admin Login</h2>
         <p className={`mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Welcome Back</p>
-        <p className={`mt-2 text-sm ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>
-          Dummy credentials are pre-filled. Just click Login.
-        </p>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <Input
-            type="email"
-            placeholder="Email Address"
+            type="text"
+            placeholder="Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             icon={

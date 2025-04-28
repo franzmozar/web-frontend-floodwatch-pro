@@ -2,11 +2,12 @@ import { useState } from 'react';
 import AddTestComponent from '../components/test/AddTestComponent';
 import PhoneLoginTest from '../components/test/PhoneLoginTest';
 import TestDataGenerator from '../components/test/TestDataGenerator';
+import LoginTest from '../components/LoginTest';
 
-type TestTab = 'basic' | 'phone' | 'flood';
+type TestTab = 'basic' | 'phone' | 'flood' | 'weblogin';
 
 const TestingPage = () => {
-  const [activeTestTab, setActiveTestTab] = useState<TestTab>('basic');
+  const [activeTestTab, setActiveTestTab] = useState<TestTab>('weblogin');
   const isDevelopment = import.meta.env.DEV;
 
   return (
@@ -19,7 +20,15 @@ const TestingPage = () => {
       </div>
       
       {/* Test type tabs */}
-      <div className="mb-6 flex border-b">
+      <div className="mb-6 flex border-b overflow-x-auto">
+        <button
+          onClick={() => setActiveTestTab('weblogin')}
+          className={`px-6 py-3 ${activeTestTab === 'weblogin' 
+            ? 'text-blue-600 border-b-2 border-blue-600 font-medium' 
+            : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          Web Login Test
+        </button>
         <button
           onClick={() => setActiveTestTab('basic')}
           className={`px-6 py-3 ${activeTestTab === 'basic' 
@@ -48,7 +57,8 @@ const TestingPage = () => {
       
       {/* Show active test component */}
       <div className="mb-8">
-        {activeTestTab === 'basic' ? <AddTestComponent /> : 
+        {activeTestTab === 'weblogin' ? <LoginTest /> :
+         activeTestTab === 'basic' ? <AddTestComponent /> : 
          activeTestTab === 'phone' ? <PhoneLoginTest /> : 
          <TestDataGenerator />}
       </div>
@@ -59,11 +69,11 @@ const TestingPage = () => {
         <p className="text-sm text-gray-700">
           {isDevelopment ? (
             <>
-              Connected via <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">proxy</span> to: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">{import.meta.env.VITE_API_URL || 'http://192.168.1.104/ens-mobile-app-backend/public'}</span>
+              Connected via <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">proxy</span> to: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">{import.meta.env.VITE_API_URL || 'https://ens-mobile-app-backend-419947829015.us-central1.run.app'}</span>
             </>
           ) : (
             <>
-              Connected directly to: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">{import.meta.env.VITE_API_URL || 'http://192.168.1.104/ens-mobile-app-backend/public'}</span>
+              Connected directly to: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">{import.meta.env.VITE_API_URL || 'https://ens-mobile-app-backend-419947829015.us-central1.run.app'}</span>
             </>
           )}
         </p>

@@ -7,10 +7,11 @@ import DataTable from '../components/ui/DataTable';
 import { BadgeVariant } from '../components/ui/Badge';
 import FloodwatchDetailsDialog from '../components/ui/FloodwatchDetailsDialog';
 import ViewUserDetailsDialog from '../components/ui/ViewUserDetailsDialog';
+import { NavPage } from '../types/common';
 
 interface DashboardPageProps {
   onLogout?: () => void;
-  onNavigate?: (page: 'dashboard' | 'users' | 'floodwatch') => void;
+  onNavigate?: (page: NavPage) => void;
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, onNavigate }) => {
@@ -203,7 +204,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, onNavigate }) =
   ];
 
   // Handle navigation
-  const handleNavigation = (page: 'dashboard' | 'users' | 'floodwatch') => {
+  const handleNavigation = (page: NavPage) => {
     if (onNavigate) {
       onNavigate(page);
     }
